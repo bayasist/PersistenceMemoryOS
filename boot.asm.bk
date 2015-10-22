@@ -1,0 +1,40 @@
+[BITS 16]
+	JMP BOOT_PROGRAM_START
+%include	"print.asm"
+%include	"32bit.asm"
+[BITS 16]
+	START_STRING DB "START HELLO OS2" , 0x0a, 0x00
+BOOT_PROGRAM_START:
+; Initialize Data Segment
+	XOR	AX, AX
+	MOV	DS, AX
+	MOV	ES, AX
+	MOV	FS, AX
+	MOV	GS, AX
+
+	XOR	BX, BX
+	XOR	CX, CX
+	XOR	DX, DX
+
+; Initialize Stack Segment and Stack Poiniter
+	
+	MOV	AX, 0x9000		; スタックポインタを0x0009FFFCに設定する
+	MOV	SS, AX
+	MOV	SP, 0xFFFC
+	
+	
+	
+	MOV	SI,START_STRING
+	CALL	PRINT_MESSAGE
+; 画面モードを設定
+
+;	MOV	AL,	0x13			; VGAグラフィックス、320x200x8bitカラー
+;	MOV	AH,	0x00
+;	INT	0x10
+	
+	
+	
+		
+	CALL	ENTER_32BITS_MODE
+	
+	HLT

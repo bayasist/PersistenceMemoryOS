@@ -1,0 +1,285 @@
+#include "../gdt.h"
+#include "app.h"
+#include "../memory.h"
+#include "../screen.h"
+#include "../api.h"
+#include "api.h"
+#include "../common.h"
+#include "../int.h"
+
+
+#define TEST_TASK_ADDRESS 0x110000
+#define TEST_TASK2_ADDRESS 0x120000
+#define TEST_TASK3_ADDRESS 0x130000
+#define TEST_TASK4_ADDRESS 0x140000
+//TSS32 taska, taskb;
+Task tasks[100];
+
+TaskListCell *taskReadyList;
+TaskListCell *taskWaitList;
+
+
+Task *nowTask;
+extern SegmentDescriptor gdt[GDT_COUNT];
+extern ImageSheet *mainImageSheet;
+void startTask(Task* task);
+
+
+
+
+ADD_LIST_FUNCTION(taskQueueInsert, TaskListCell, Task*)
+DELETE_QUEUE_FUNCTION(taskQueueDelete, TaskListCell, Task*)
+COUNT_LIST_FUNCTION(getTaskCount, TaskListCell)
+void taskQueueInsertFirst(TaskListCell *list, Task *task){
+	TaskListCell *insertCell = allocMemoryType(TaskListCell);
+	insertCell->next = list->next;
+	insertCell->value = task;
+	list->next = insertCell;
+}
+
+
+int taskListDelete(TaskListCell *list, Task *value){
+	TaskListCell *p, *select, *next;
+	select = NULL;
+	for(p = list; p->next != NULL; p = p->next){
+		if(p->next->value == value){
+			select = p;
+			break;
+		}
+	}
+	if(select == NULL){
+		return 0;
+	}
+	next = select->next->next;
+	select->next = next;
+	return 1;
+}
+
+//タスクリストの中にタスクが存在するかを取得
+int existTask(TaskListCell *list, Task *value){
+	TaskListCell *p;
+	for(p = list; p->next != NULL; p = p->next){
+		if(p->next->value == value){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+
+void setTaskSegmentDescriptor(Task *task){
+	//TTSの設定
+	GdtIndex tssIndex = getEmptySegmentDescriptorIndex();
+	GdtIndex gdtIndex;
+	GdtIndex gdtDataIndex;
+	
+	setSegmentDescriptor(tssIndex, 103, (ADDRESS)&task->tss, AR_TSS32);
+	task->tssIndex = tssIndex;
+	
+	
+	gdtIndex = getEmptySegmentDescriptorIndex();
+	setSegmentDescriptor(gdtIndex, task->codeMemoryRange.size, (ADDRESS)task->codeMemoryRange.start, (0x409a | 0x8000) | 0x60);
+	task->codeSegmentIndex = gdtIndex;
+	
+	gdtDataIndex = getEmptySegmentDescriptorIndex();
+	setSegmentDescriptor(gdtDataIndex, task->stackMemoryRange.size, (ADDRESS)task->stackMemoryRange.start, (0x4092 | 0x8000) | 0x60);
+	task->dataSegmentIndex = gdtDataIndex;
+	
+}
+
+void setTaskTss(Task *task){
+	
+	task->tss.ldtr		= 0;
+	task->tss.iomap		= 0x40000000;
+	task->tss.eip		= (ADDRESS)startTask;
+	task->tss.eflags	= 0x00000202; /* IF = 1; */
+	task->tss.eax		= 0;
+	task->tss.ecx		= 0;
+	task->tss.edx		= 0;
+	task->tss.ebx		= 0;
+	task->tss.esp		= (ADDRESS)task->starterTaskMemoryRange.start + task->starterTaskMemoryRange.size - 8;
+	task->tss.ebp		= 0;
+	task->tss.esi		= 0;
+	task->tss.edi		= 0;
+	task->tss.es		= 2 * 8;
+	task->tss.cs		= 1 * 8;
+	task->tss.ss		= 2 * 8;
+	task->tss.ds		= 2 * 8;
+	task->tss.fs		= 2 * 8;
+	task->tss.gs		= 2 * 8;
+}
+/*
+	アプリケーションを起動します。
+	GDTやTTSの追加も行います
+*/
+int launchTask(Task *task){
+	task->stackMemoryRange.size = DEFAULT_STACK_SIZE;
+	task->stackMemoryRange.start = allocMemoryTypeSize(char, task->stackMemoryRange.size);
+	task->starterTaskMemoryRange.size = STARTER_TASK_DEFAULT_STACK_SIZE;
+	task->starterTaskMemoryRange.start = allocMemoryTypeSize(char, task->starterTaskMemoryRange.size);
+	setTaskSegmentDescriptor(task);
+	setTaskTss(task);
+	
+	//スタックに引数を追加
+	*((Task**)task->tss.esp + 1) = task;
+	
+	initTaskEventQueue(task);
+	
+	taskQueueInsert(taskReadyList, task);
+	return 0;
+}
+
+extern ImageSheet *windowImageSheet;
+void taskswitch(Task *task){
+	nowTask = task;
+	_asm_taskswitch(0, convertGdtIndex(nowTask->tssIndex));
+}
+int taskSwitch(){
+	if(getTaskCount(taskReadyList) <= 0){
+		return -1;
+	}else{
+		Task *nextTask;
+		taskQueueDelete(taskReadyList, &nextTask);
+		if(nowTask != NULL){
+			taskQueueInsert(taskReadyList, nowTask);
+		}
+		
+		taskswitch(nextTask);
+		return 0;
+	}
+	
+}
+
+//プロセスを待ち状態とする
+int sleepTask(Task *task){
+	if(nowTask == task){
+	}else{
+		//実行可能状態のプロセスを待ち状態に移行する場合はリストから削除(そんな場合はないと思うが)
+		if(!taskListDelete(taskReadyList, task)){
+			/*
+				TODO エラー処理
+			*/
+			cli();
+			while(1);
+		}
+	}
+	taskQueueInsert(taskWaitList, task);
+	
+	
+	//現在のタスクを待ち状態にする場合は、プロセスを切り替える
+	if(nowTask == task){
+		//既存のプロセス切り替え関数は使えない(今のプロセスが実行待ち状態のキューに入るため、実行待ちじゃなくて待ち状態に入れたい)
+		Task *nextTask;
+		while(!taskQueueDelete(taskReadyList, &nextTask));
+		//nowTask = nextTask;
+		taskswitch(nextTask);
+	}
+	return 0;
+}
+
+//プロセスを実行可能状態とする
+void wakeUpTask(Task *task){
+	if(!taskListDelete(taskWaitList, task)){
+		//すでにおきてるか、実行されていない
+		return;
+	}
+	taskQueueInsert(taskReadyList, task);
+}
+
+//プロセスを実行可能状態とする(次にすぐ実行する)
+void wakeUpTaskFirst(Task *task){
+	/*
+	Point p;
+	TaskListCell *ppp;
+	p.x = 0;
+	p.y = 16;
+	*/
+	if(!taskListDelete(taskWaitList, task)){
+		//すでにおきてるか、実行されていない
+		return;
+	}
+	taskQueueInsertFirst(taskReadyList, task);
+	/*
+	cli();
+	putInt(windowImageSheet, (int)task, p, COLOR_BLACK);
+	for(ppp = taskWaitList; ppp->next != NULL; ppp = ppp->next){
+		p.y += 16;
+		putInt(windowImageSheet, (int)(ppp->next->value), p, COLOR_BLACK);
+	}
+	draw();
+	while(1);
+	*/
+}
+
+
+
+/*
+	アプリケーションを開始する
+	この関数はタスクスイッチでのみ呼び出される。
+	通常の関数呼び出しはしない
+
+*/
+void startTask(Task *task){	
+	//_asm_launch_task(tasks[3].tss.eip, tasks[3].tss.cs, tasks[3].tss.esp, tasks[3].tss.ds, (&tasks[1].tss.esp0));
+	_asm_launch_task(task->header->startAddress, convertGdtIndex(task->codeSegmentIndex), task->stackMemoryRange.size, convertGdtIndex(task->dataSegmentIndex), &(task->tss.esp0));
+	//TODO アプリの終了のことを考える
+	while(1);
+}
+
+extern ImageSheet *windowImageSheet;
+
+Task *eventTask;
+int initedApp;
+void initApp(void){
+	int i = 0;
+	Point p;
+	p.x = p.y = 0;
+	//タスクのリストにダミーセルを作成
+	taskReadyList = allocMemoryType(TaskListCell);
+	taskReadyList->next = NULL;
+	
+	//タスクのリストにダミーセルを作成
+	taskWaitList = allocMemoryType(TaskListCell);
+	taskWaitList->next = NULL;
+	
+	tasks[0].tss.ldtr = 0;
+	tasks[0].tss.iomap = 0x40000000;
+	setSegmentDescriptor(3, 103, (int)(&tasks[0].tss), AR_TSS32);
+	loadTr(3);
+	tasks[0].codeSegmentIndex = 1;
+	tasks[0].dataSegmentIndex = 2;
+	tasks[0].tssIndex = 3;
+	
+	nowTask = &tasks[0];
+	eventTask = &tasks[0];
+	
+	tasks[2].codeMemoryRange.start = (void*)TEST_TASK_ADDRESS;
+	tasks[2].header = (void*)TEST_TASK_ADDRESS;
+	tasks[2].codeMemoryRange.size = 0x10000;
+	launchTask(&tasks[2]);
+	
+	tasks[3].codeMemoryRange.start = (void*)TEST_TASK2_ADDRESS;
+	tasks[3].header = (void*)TEST_TASK2_ADDRESS;
+	tasks[3].codeMemoryRange.size = 0x10000;
+	launchTask(&tasks[3]);
+	
+	
+	tasks[4].codeMemoryRange.start = (void*)TEST_TASK3_ADDRESS;
+	tasks[4].header = (void*)TEST_TASK3_ADDRESS;
+	tasks[4].codeMemoryRange.size = 0x10000;
+	launchTask(&tasks[4]);
+	
+	tasks[5].codeMemoryRange.start = (void*)TEST_TASK4_ADDRESS;
+	tasks[5].header = (void*)TEST_TASK4_ADDRESS;
+	tasks[5].codeMemoryRange.size = 0x10000;
+	launchTask(&tasks[5]);
+	
+	initedApp = 1;
+	return;
+}
+
+
+void loadTr(int gdtIndex){
+	_asm_load_tr(convertGdtIndex(gdtIndex));
+}

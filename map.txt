@@ -1,0 +1,9 @@
+0x00000	peMem
+0x7c00	BootLoader
+0xA0000	peMem2
+0x100000	kernel\KImage
+0x110000	kernel\app\test\test
+0x120000	kernel\app\test2\test
+0x130000	kernel\app\test3\test
+0x140000	kernel\app\test4\test
+0x200000	kernel\default.font

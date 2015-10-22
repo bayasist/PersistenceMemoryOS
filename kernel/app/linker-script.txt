@@ -1,0 +1,45 @@
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386");
+OUTPUT_ARCH(i386);
+ENTRY(BayaMain);
+SECTIONS
+{
+    . = 0x00000;
+    .vector :
+    {
+    	LONG(1) /*version*/
+        LONG(ABSOLUTE(BayaMain))
+        . = 0x00fc;
+    	BYTE(0x42) /*B*/
+    	BYTE(0x41) /*A*/
+    	BYTE(0x59) /*Y*/
+    	BYTE(0x41) /*A*/
+    }
+    . = 0x00100;
+    .text :
+    {
+        _text_start = .;
+        *(.text)
+        _text_end = .;
+    }
+
+    .rodata :
+    {
+        _rodata_start = .;
+        *(.rodata)
+        _rodata_end = .;
+    }
+
+    .data :
+    {
+        _data_start = .;
+        *(.data)
+        _data_end = .;
+    }
+
+    .bss :
+    {
+        _bss_start = .;
+        *(.bss)
+        _bss_end = .;
+    }
+}

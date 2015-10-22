@@ -1,0 +1,454 @@
+ファイル (シンボル) があるため書庫のメンバが取り込まれました
+/lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+                              int.o (__moddi3)
+
+割り当てている共通シンボル
+共通シンボル        サイズ            ファイル
+
+waitKeyupTaskList   0x4               int.o
+waitMouseUpTaskList
+                    0x4               int.o
+endInitScreen       0x4               main.o
+taskSwitchCount     0x8               idt.o
+allocedMemory       0x8               memory.o
+mouseButtons        0x4               mouse.o
+waitMouseMoveTaskList
+                    0x4               int.o
+keyboardState       0x80              keyboard.o
+tasks               0x36b0            app/app.o
+moveStartWindowLocation
+                    0x8               mouse.o
+movingWindow        0x4               mouse.o
+gdt                 0x2000            gdt.o
+nowTask             0x4               app/app.o
+focusedWindow       0x4               window.o
+freeMemoryList      0xc               memory.o
+taskWaitList        0x4               app/app.o
+taskReadyList       0x4               app/app.o
+mainImageSheet      0x4               screen.o
+eventBuf            0x408             idt.o
+waitTimerTaskList   0x4               int.o
+moveStartMouseLocation
+                    0x8               mouse.o
+cliCount            0x4               common.o
+lastTaskSwitchTimer
+                    0x8               idt.o
+gdtToc              0x6               gdt.o
+mouseEventCount     0x4               mouse.o
+VmBufferAddress     0x4               screen.o
+mouseImageSheet     0x4               screen.o
+waitKeydownTaskList
+                    0x4               int.o
+pFont               0x4               screen.o
+windowImageSheet    0x4               screen.o
+idt                 0x800             idt.o
+timerCount          0x8               idt.o
+idtr                0x6               idt.o
+mouseBuf            0x10              mouse.o
+allowTaskSwitch     0x4               idt.o
+initedApp           0x4               app/app.o
+waitMouseDownTaskList
+                    0x4               int.o
+mousePoint          0x8               mouse.o
+timer_tick          0x4               idt.o
+windowList          0x4               window.o
+aaaaa               0x4               screen.o
+memorySize          0x8               memory.o
+eventTask           0x4               app/app.o
+taskEventQueueList  0x4               int.o
+
+メモリ設定
+
+名前           原点             長さ             属性
+*default*        0x00000000         0xffffffff
+
+リンカスクリプトおよびメモリマップ
+
+                0x00100000                . = 0x100000
+
+.text           0x00100000     0x3982
+                0x00100000                _text_start = .
+ kernel.o(.text._kmain)
+ kernel.o(.text.*)
+ *(.text)
+ .text          0x00100000        0x5 kernel.o
+                0x00100000                kmain
+ *fill*         0x00100005        0xb 
+ .text          0x00100010      0xaf4 screen.o
+                0x00100010                getColorValue
+                0x00100020                setPalette
+                0x001000a0                isTransparent
+                0x001000b0                drawImageSheet
+                0x00100300                draw
+                0x001003d0                drawScreenPoint
+                0x00100410                clearScreen
+                0x00100480                transferBackBuffer
+                0x001004a0                drawChar
+                0x00100590                drawString
+                0x00100610                stringRightShift
+                0x00100640                putInt2
+                0x001006c0                putInt
+                0x00100820                _addImageSheet
+                0x00100860                addImageSheet
+                0x00100890                _deleteImageSheet
+                0x001008e0                deleteImageSheet
+                0x00100910                moveTopImageSheet
+                0x00100950                initImageSheet
+                0x001009b0                initScreen
+ *fill*         0x00100b04        0xc 
+ .text          0x00100b10      0x70d idt.o
+                0x00100b10                initEvent
+                0x00100b70                setInterruptGateDescriptor
+                0x00100bd0                initPic
+                0x00100ce0                waitKbcSendReady
+                0x00100d00                initKeyboard
+                0x00100d60                enableMouseMode
+                0x00100dc0                initIdt
+                0x00100f10                readEventBuf
+                0x00100f80                writeEventBuf
+                0x00100fc0                timerEvent
+                0x001010d0                keyboardEvent
+                0x00101170                mouseEvent
+ .text          0x0010121d        0x0 main.o
+ *fill*         0x0010121d        0x3 
+ .text          0x00101220       0x9a common.o
+                0x00101220                outPortByte
+                0x00101230                inPortByte
+                0x00101240                isHitRectanglePoint
+                0x00101280                initCommon
+                0x00101290                cli
+                0x001012a0                sti
+ .text          0x001012ba       0x5c int_event.s.o
+                0x001012ba                __call_from_app
+                0x001012d1                _asm_keyboard_event
+                0x001012e8                _asm_mouse_event
+                0x001012ff                _asm_timer_event
+ *fill*         0x00101316        0xa 
+ .text          0x00101320      0x1b2 memory.o
+                0x00101320                initMemory
+                0x00101390                insertMemoryList
+                0x001013f0                changeSize
+                0x00101410                allocMemory2
+                0x001014d0                freeMemory
+ *fill*         0x001014d2        0xe 
+ .text          0x001014e0      0x19f gdt.o
+                0x001014e0                setSegmentDescriptor
+                0x00101540                getBaseAddressFromSegmentDescriptor
+                0x00101570                getLimitFromSegmentDescriptor
+                0x00101590                getEmptySegmentDescriptorIndex
+                0x001015d0                initGdt
+ .text          0x0010167f       0x39 app/app.s.o
+                0x0010167f                _asm_taskswitch
+                0x00101684                _asm_load_tr
+                0x0010168a                _asm_launch_task
+ *fill*         0x001016b8        0x8 
+ .text          0x001016c0      0x71a app/app.o
+                0x001016c0                startTask
+                0x00101700                taskQueueInsert
+                0x00101740                taskQueueDelete
+                0x00101780                getTaskCount
+                0x001017a0                taskQueueInsertFirst
+                0x001017d0                taskListDelete
+                0x00101800                existTask
+                0x00101830                setTaskSegmentDescriptor
+                0x001018d0                setTaskTss
+                0x00101960                launchTask
+                0x00101a60                taskswitch
+                0x00101a90                taskSwitch
+                0x00101b00                sleepTask
+                0x00101bb0                wakeUpTask
+                0x00101c00                wakeUpTaskFirst
+                0x00101c60                initApp
+                0x00101dd0                loadTr
+ .text          0x00101dda      0x3c1 api.o
+                0x00101dda                CallAPI
+ .text          0x0010219b       0x1a api.s.o
+                0x0010219b                _asm_api
+ *fill*         0x001021b5        0xb 
+ .text          0x001021c0      0x988 int.o
+                0x001021c0                initWaitEventTaskList
+                0x001021e0                insertEventQueue
+                0x00102230                deleteEventQueue
+                0x00102290                initEventQueue
+                0x001022b0                getTaskEventQueueCell
+                0x001022e0                insertTaskEventQueueCell
+                0x00102340                insertTaskEventQueue
+                0x001023b0                deleteTaskEventQueue
+                0x00102400                initTaskEventQueue
+                0x00102450                inittaskEventQueueListt
+                0x00102470                initInt
+                0x00102520                addWaitEventTask2
+                0x00102570                addWaitEventTask
+                0x001025f0                timerEventTask
+                0x001026e0                mouseEventTask
+                0x001027d0                mouseUpEventTask
+                0x00102810                mouseDownEventTask
+                0x00102850                mouseMoveEventTask
+                0x00102890                keyEventTask
+                0x00102950                keyupEventTask
+                0x00102980                keydownEventTask
+                0x001029b0                eventMainLoop
+ *fill*         0x00102b48        0x8 
+ .text          0x00102b50      0x546 window.o
+                0x00102b50                _addWindowList
+                0x00102b90                addWindowList
+                0x00102bb0                _deleteWindowList
+                0x00102c00                deleteWindowList
+                0x00102c20                initWindows
+                0x00102cd0                initWindow
+                0x00102e00                moveTopWindow
+                0x00102e40                clearWindow
+                0x00102e50                getWindowOuterRectangle
+                0x00102e90                getWindowInnerRectangle
+                0x00102ee0                getHitWindow
+                0x00102f80                getHitWindowInner
+                0x00103010                focusWindow
+                0x00103090                getFocusedWindow
+ *fill*         0x00103096        0xa 
+ .text          0x001030a0      0x626 mouse.o
+                0x001030a0                initMouse
+                0x00103130                moveMouse
+                0x00103240                mouseUp
+                0x00103320                mouseDown
+                0x00103480                mouseButtonClick
+                0x00103600                mouseMain
+ *fill*         0x001036c6        0xa 
+ .text          0x001036d0       0xe4 keyboard.o
+                0x001036d0                getKeyChar
+                0x001036f0                keyup
+                0x00103740                keydown
+                0x00103790                keyboardMain
+ *fill*         0x001037b4        0xc 
+ .text          0x001037c0      0x1c2 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+                0x001037c0                __moddi3
+                0x00103982                _text_end = .
+
+.text.startup   0x00103990       0x57
+ .text.startup  0x00103990       0x57 main.o
+                0x00103990                main
+
+.rodata         0x00103a00       0xdc
+                0x00103a00                _rodata_start = .
+ *(.rodata)
+ .rodata        0x00103a00       0x34 api.o
+ .rodata        0x00103a34       0x18 int.o
+ *fill*         0x00103a4c       0x14 
+ .rodata        0x00103a60       0x7c keyboard.o
+                0x00103adc                _rodata_end = .
+
+.eh_frame       0x00103adc     0x11f8
+ .eh_frame      0x00103adc       0x2c kernel.o
+ .eh_frame      0x00103b08      0x368 screen.o
+ .eh_frame      0x00103e70      0x17c idt.o
+ .eh_frame      0x00103fec       0x38 main.o
+ .eh_frame      0x00104024       0xbc common.o
+ .eh_frame      0x001040e0       0x68 int_event.s.o
+ .eh_frame      0x00104148       0xb0 memory.o
+ .eh_frame      0x001041f8       0x98 gdt.o
+ .eh_frame      0x00104290       0x54 app/app.s.o
+ .eh_frame      0x001042e4      0x23c app/app.o
+ .eh_frame      0x00104520       0x40 api.o
+ .eh_frame      0x00104560       0x2c api.s.o
+ .eh_frame      0x0010458c      0x314 int.o
+ .eh_frame      0x001048a0      0x22c window.o
+ .eh_frame      0x00104acc      0x120 mouse.o
+ .eh_frame      0x00104bec       0x98 keyboard.o
+ .eh_frame      0x00104c84       0x50 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.data           0x00104cd4        0x0
+                0x00104cd4                _data_start = .
+ *(.data)
+ .data          0x00104cd4        0x0 kernel.o
+ .data          0x00104cd4        0x0 screen.o
+ .data          0x00104cd4        0x0 idt.o
+ .data          0x00104cd4        0x0 main.o
+ .data          0x00104cd4        0x0 common.o
+ .data          0x00104cd4        0x0 int_event.s.o
+ .data          0x00104cd4        0x0 memory.o
+ .data          0x00104cd4        0x0 gdt.o
+ .data          0x00104cd4        0x0 app/app.s.o
+ .data          0x00104cd4        0x0 app/app.o
+ .data          0x00104cd4        0x0 api.o
+ .data          0x00104cd4        0x0 api.s.o
+ .data          0x00104cd4        0x0 int.o
+ .data          0x00104cd4        0x0 window.o
+ .data          0x00104cd4        0x0 mouse.o
+ .data          0x00104cd4        0x0 keyboard.o
+ .data          0x00104cd4        0x0 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+                0x00104cd4                _data_end = .
+
+.bss            0x00104ce0     0x6460
+                0x00104ce0                _bss_start = .
+ *(.bss)
+ .bss           0x00104ce0        0x0 kernel.o
+ .bss           0x00104ce0        0x0 screen.o
+ .bss           0x00104ce0        0x0 idt.o
+ .bss           0x00104ce0        0x0 main.o
+ .bss           0x00104ce0        0x0 common.o
+ .bss           0x00104ce0        0x0 int_event.s.o
+ .bss           0x00104ce0        0x0 memory.o
+ .bss           0x00104ce0        0x0 gdt.o
+ .bss           0x00104ce0        0x0 app/app.s.o
+ .bss           0x00104ce0        0x0 app/app.o
+ .bss           0x00104ce0        0x0 api.o
+ .bss           0x00104ce0        0x0 api.s.o
+ .bss           0x00104ce0        0x0 int.o
+ .bss           0x00104ce0        0x0 window.o
+ .bss           0x00104ce0        0x0 mouse.o
+ .bss           0x00104ce0        0x0 keyboard.o
+ .bss           0x00104ce0        0x0 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+                0x00104ce0                _bss_end = .
+ COMMON         0x00104ce0       0x18 screen.o
+                0x00104ce0                mainImageSheet
+                0x00104ce4                VmBufferAddress
+                0x00104ce8                mouseImageSheet
+                0x00104cec                pFont
+                0x00104cf0                windowImageSheet
+                0x00104cf4                aaaaa
+ *fill*         0x00104cf8        0x8 
+ COMMON         0x00104d00      0xc58 idt.o
+                0x00104d00                taskSwitchCount
+                0x00104d20                eventBuf
+                0x00105128                lastTaskSwitchTimer
+                0x00105140                idt
+                0x00105940                timerCount
+                0x00105948                idtr
+                0x00105950                allowTaskSwitch
+                0x00105954                timer_tick
+ COMMON         0x00105958        0x4 main.o
+                0x00105958                endInitScreen
+ COMMON         0x0010595c        0x4 common.o
+                0x0010595c                cliCount
+ COMMON         0x00105960       0x20 memory.o
+                0x00105960                allocedMemory
+                0x00105968                freeMemoryList
+                0x00105978                memorySize
+ COMMON         0x00105980     0x2006 gdt.o
+                0x00105980                gdt
+                0x00107980                gdtToc
+ *fill*         0x00107986       0x1a 
+ COMMON         0x001079a0     0x36c4 app/app.o
+                0x001079a0                tasks
+                0x0010b050                nowTask
+                0x0010b054                taskWaitList
+                0x0010b058                taskReadyList
+                0x0010b05c                initedApp
+                0x0010b060                eventTask
+ COMMON         0x0010b064       0x1c int.o
+                0x0010b064                waitKeyupTaskList
+                0x0010b068                waitMouseUpTaskList
+                0x0010b06c                waitMouseMoveTaskList
+                0x0010b070                waitTimerTaskList
+                0x0010b074                waitKeydownTaskList
+                0x0010b078                waitMouseDownTaskList
+                0x0010b07c                taskEventQueueList
+ COMMON         0x0010b080        0x8 window.o
+                0x0010b080                focusedWindow
+                0x0010b084                windowList
+ COMMON         0x0010b088       0x34 mouse.o
+                0x0010b088                mouseButtons
+                0x0010b08c                moveStartWindowLocation
+                0x0010b094                movingWindow
+                0x0010b098                moveStartMouseLocation
+                0x0010b0a0                mouseEventCount
+                0x0010b0a4                mouseBuf
+                0x0010b0b4                mousePoint
+ *fill*         0x0010b0bc        0x4 
+ COMMON         0x0010b0c0       0x80 keyboard.o
+                0x0010b0c0                keyboardState
+LOAD kernel.o
+LOAD screen.o
+LOAD idt.o
+LOAD main.o
+LOAD common.o
+LOAD int_event.s.o
+LOAD memory.o
+LOAD gdt.o
+LOAD app/app.s.o
+LOAD app/app.o
+LOAD api.o
+LOAD api.s.o
+LOAD int.o
+LOAD window.o
+LOAD mouse.o
+LOAD keyboard.o
+LOAD /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a
+OUTPUT(KImage binary)
+
+.comment        0x00000000      0x132
+ .comment       0x00000000       0x12 kernel.o
+ .comment       0x00000012       0x12 screen.o
+ .comment       0x00000024       0x12 idt.o
+ .comment       0x00000036       0x12 main.o
+ .comment       0x00000048       0x12 common.o
+ .comment       0x0000005a       0x12 int_event.s.o
+ .comment       0x0000006c       0x12 memory.o
+ .comment       0x0000007e       0x12 gdt.o
+ .comment       0x00000090       0x12 app/app.s.o
+ .comment       0x000000a2       0x12 app/app.o
+ .comment       0x000000b4       0x12 api.o
+ .comment       0x000000c6       0x12 api.s.o
+ .comment       0x000000d8       0x12 int.o
+ .comment       0x000000ea       0x12 window.o
+ .comment       0x000000fc       0x12 mouse.o
+ .comment       0x0000010e       0x12 keyboard.o
+ .comment       0x00000120       0x12 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 kernel.o
+ .note.GNU-stack
+                0x00000000        0x0 screen.o
+ .note.GNU-stack
+                0x00000000        0x0 idt.o
+ .note.GNU-stack
+                0x00000000        0x0 main.o
+ .note.GNU-stack
+                0x00000000        0x0 common.o
+ .note.GNU-stack
+                0x00000000        0x0 int_event.s.o
+ .note.GNU-stack
+                0x00000000        0x0 memory.o
+ .note.GNU-stack
+                0x00000000        0x0 gdt.o
+ .note.GNU-stack
+                0x00000000        0x0 app/app.s.o
+ .note.GNU-stack
+                0x00000000        0x0 app/app.o
+ .note.GNU-stack
+                0x00000000        0x0 api.o
+ .note.GNU-stack
+                0x00000000        0x0 api.s.o
+ .note.GNU-stack
+                0x00000000        0x0 int.o
+ .note.GNU-stack
+                0x00000000        0x0 window.o
+ .note.GNU-stack
+                0x00000000        0x0 mouse.o
+ .note.GNU-stack
+                0x00000000        0x0 keyboard.o
+ .note.GNU-stack
+                0x00000000        0x0 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_info     0x00000000      0x560
+ .debug_info    0x00000000      0x560 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_abbrev   0x00000000      0x190
+ .debug_abbrev  0x00000000      0x190 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_loc      0x00000000      0x3ec
+ .debug_loc     0x00000000      0x3ec /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_ranges   0x00000000       0x38
+ .debug_ranges  0x00000000       0x38 /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_line     0x00000000      0x19b
+ .debug_line    0x00000000      0x19b /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)
+
+.debug_str      0x00000000      0x5ef
+ .debug_str     0x00000000      0x5ef /lib/gcc/i686-pc-linux-gnu/4.8.2/libgcc.a(_moddi3.o)

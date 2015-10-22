@@ -1,0 +1,91 @@
+
+メモリ設定
+
+名前           原点             長さ             属性
+*default*        0x00000000         0xffffffff
+
+リンカスクリプトおよびメモリマップ
+
+                0x00000000                . = 0x0
+
+.vector         0x00000000      0x100
+                0x00000000        0x4 LONG 0x1
+                0x00000004        0x4 LONG 0x110 ABSOLUTE (BayaMain)
+                0x000000fc                . = 0xfc
+ *fill*         0x00000008       0xf4 
+                0x000000fc        0x1 BYTE 0x42
+                0x000000fd        0x1 BYTE 0x41
+                0x000000fe        0x1 BYTE 0x59
+                0x000000ff        0x1 BYTE 0x41
+                0x00000100                . = 0x100
+
+.text           0x00000100      0x55b
+                0x00000100                _text_start = .
+ *(.text)
+ .text          0x00000100      0x156 main.o
+                0x00000100                rand
+                0x00000110                BayaMain
+ .text          0x00000256      0x196 ../api.o
+                0x00000256                api_print
+                0x00000296                api_draw
+                0x000002c4                api_clear
+                0x000002f2                api_addEvent
+                0x00000336                api_peekEventQueue
+                0x0000036a                api_waitEventQueue
+                0x0000039e                api_createWindow
+ *fill*         0x000003ec        0x4 
+ .text          0x000003f0      0x26b ../lib/string.o
+                0x000003f0                strcls
+                0x00000410                int2hex
+                0x00000470                figure
+                0x000004d0                int2dec
+                0x00000580                sprintf
+                0x0000065b                _text_end = .
+
+.rodata         0x0000065b        0x0
+                0x0000065b                _rodata_start = .
+ *(.rodata)
+                0x0000065b                _rodata_end = .
+
+.rodata.cst4    0x0000065c        0x4
+ .rodata.cst4   0x0000065c        0x4 main.o
+
+.eh_frame       0x00000660      0x260
+ .eh_frame      0x00000660       0x50 main.o
+ .eh_frame      0x000006b0      0x114 ../api.o
+ .eh_frame      0x000007c4       0xfc ../lib/string.o
+
+.data           0x000008c0        0x0
+                0x000008c0                _data_start = .
+ *(.data)
+ .data          0x000008c0        0x0 main.o
+ .data          0x000008c0        0x0 ../api.o
+ .data          0x000008c0        0x0 ../lib/string.o
+                0x000008c0                _data_end = .
+
+.bss            0x000008c0        0x8
+                0x000008c0                _bss_start = .
+ *(.bss)
+ .bss           0x000008c0        0x8 main.o
+                0x000008c0                randSeed
+ .bss           0x000008c8        0x0 ../api.o
+ .bss           0x000008c8        0x0 ../lib/string.o
+                0x000008c8                _bss_end = .
+LOAD main.o
+LOAD ../api.o
+LOAD ../lib/string.o
+OUTPUT(test binary)
+
+.comment        0x00000000       0x36
+ .comment       0x00000000       0x12 main.o
+ .comment       0x00000012       0x12 ../api.o
+ .comment       0x00000024       0x12 ../lib/string.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 main.o
+ .note.GNU-stack
+                0x00000000        0x0 ../api.o
+ .note.GNU-stack
+                0x00000000        0x0 ../lib/string.o

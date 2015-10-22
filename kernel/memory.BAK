@@ -1,0 +1,292 @@
+#include "memory.h"
+#include "common.h"
+#include "screen.h"
+extern ImageSheet *windowImageSheet;
+
+//TODO freeの際の、メモリの順番を考慮する
+FreeMemoryList freeMemoryList;
+long long allocedMemory;
+long long memorySize;
+void initMemory(void){
+	allocedMemory = 0;
+	freeMemoryList.next =(void*) 0x300000;
+	freeMemoryList.before = NULL;
+	freeMemoryList.size = (MemorySize)sizeof(freeMemoryList);
+	freeMemoryList.next->next = NULL;
+	freeMemoryList.next->before = &freeMemoryList;
+	freeMemoryList.next->size = 0x1000000;
+	memorySize = freeMemoryList.next->size;
+}
+
+void insertMemoryList(FreeMemoryList* item){
+	FreeMemoryList *p, *select;
+	select = NULL;
+	if(freeMemoryList.next == NULL){
+		freeMemoryList.next = item;
+		item->before = &freeMemoryList;
+		item->next = NULL;
+		return;
+	}
+	
+	for(p = &freeMemoryList; p->next != NULL; p = p->next){
+		if(p->next->size > item->size){
+			select = p->next;
+			break;
+		}
+	}
+	if(select == NULL){
+		p->next = item;
+		item->before = p;
+		item->next = NULL;
+	}else{
+		item->next = select;
+		item->before = select->before;
+		select->before->next = item;
+		select->before = item;
+		
+	}
+	
+	/*
+	FreeMemoryList *p, *select;
+	select = NULL;
+	if(freeMemoryList.next == NULL){
+		freeMemoryList.next = item;
+		item->before = &freeMemoryList;
+		item->next = NULL;
+		return;
+	}
+	
+	for(p = freeMemoryList.next; p != NULL; p = p->next){
+		if(p->size > item->size){
+			select = p;
+			break;
+		}
+		if(p->next == NULL){
+			break;
+		}
+	}
+	if(select == NULL){
+		p->next = item;
+		item->before = p;
+		item->next = NULL;
+	}else{
+		item->next = select;
+		item->before = select->before;
+		select->before->next = item;
+		select->before = item;
+		
+	}
+	
+	*/
+}
+
+MemorySize changeSize(MemorySize size){
+	if(size % 8 == 0){
+		return size;
+	}
+	return ((size / 8) + 1) * 8;
+}
+extern int endInitScreen;
+void* allocMemory2(MemorySize size){
+	FreeMemoryList *p, *select;
+	void *resut;
+	Point po;
+	cli();
+	size = changeSize(size);
+	po.x = po.y = 0;
+	select = NULL;
+	for(p = &freeMemoryList; p->next != NULL; p = p->next){
+		if(size == p->next->size){
+			select = p->next;
+			break;
+		}
+		if(p->next->size - size >= (MemorySize)sizeof(freeMemoryList)){
+			select = p->next;
+			break;
+		}
+	}
+	if(select == NULL){
+		cli();
+		while(1);
+		sti();
+		return NULL;
+	}
+	
+	
+	if(size == select->size){
+		FreeMemoryList* nextBefore;
+		FreeMemoryList* beforeNext;
+		
+		nextBefore = select->before;
+		beforeNext = select->next;
+		
+		
+		select->before->next = beforeNext;
+		if(select->next != NULL){
+			select->next->before = nextBefore;
+		}
+		
+		allocedMemory += size;
+		resut = select;
+		sti();
+		
+		
+		if(endInitScreen){
+			clearScreen(windowImageSheet, COLOR_BLACK);
+			putInt(windowImageSheet, allocedMemory, po, COLOR_BLACK);
+		}
+		return select;
+	}else{
+		
+		FreeMemoryList* nextBefore;
+		FreeMemoryList* beforeNext;
+		
+		nextBefore = select->before;
+		beforeNext = select->next;
+		
+		
+		select->before->next = beforeNext;
+		if(select->next != NULL){
+			select->next->before = nextBefore;
+		}
+		
+		select->size -= size;
+		
+		insertMemoryList(select);
+		allocedMemory += size;
+		resut = (char*)select + select->size;;
+		sti();
+		
+		
+		if(endInitScreen){
+			clearScreen(windowImageSheet, COLOR_TRANSPARENT);
+			putInt(windowImageSheet, allocedMemory, po, COLOR_BLACK);
+		}
+		return resut;
+		
+	}
+	
+	/*
+	FreeMemoryList *p, *select;
+	Point po;
+	po.x = po.y = 0;
+	select = NULL;
+	for(p = freeMemoryList.next; p != NULL; p = p->next){
+		if(size == p->size){
+			select = p;
+			break;
+		}
+		if(p->size - size >= (MemorySize)sizeof(freeMemoryList)){
+			select = p;
+			break;
+		}
+	}
+	if(select == NULL){
+		cli();
+		while(1);
+		return NULL;
+	}
+	if(size == p->size){
+		FreeMemoryList* nextBefore;
+		FreeMemoryList* beforeNext;
+		
+		nextBefore = select->before;
+		beforeNext = select->next;
+		
+		
+		select->before->next = beforeNext;
+		if(select->next != NULL){
+			select->next->before = nextBefore;
+		}
+		
+		allocedMemory += size;
+		if(endInitScreen){
+			//clearScreen(windowImageSheet, COLOR_BLACK);
+			//putInt(windowImageSheet, allocedMemory, po, COLOR_BLACK);
+		}
+		return select;
+	}else{
+		
+		FreeMemoryList* nextBefore;
+		FreeMemoryList* beforeNext;
+		
+		nextBefore = select->before;
+		beforeNext = select->next;
+		
+		
+		select->before->next = beforeNext;
+		if(select->next != NULL){
+			select->next->before = nextBefore;
+		}
+		
+		select->size -= size;
+		
+		insertMemoryList(select);
+		
+		
+		allocedMemory += size;
+		if(endInitScreen){
+			//clearScreen(windowImageSheet, COLOR_TRANSPARENT);
+			//putInt(windowImageSheet, allocedMemory, po, COLOR_BLACK);
+		}
+		return (char*)select + select->size;// - size;
+		
+	}
+	*/
+	
+	
+}
+void freeMemory(void* address, MemorySize size){
+	return;
+	FreeMemoryList *p;
+	Point po;
+	size = changeSize(size);
+	po.x = po.y = 0;
+	for(p = freeMemoryList.next; p != NULL; p = p->next){
+		if((char*)p + p->size == address){
+			/*開放したいメモリの前が空き領域なら*/
+			p->size += size;
+			allocedMemory -= size;
+			return;
+		}else if((char*)address + size == (char*)p){
+			/*開放したいメモリの後が空き領域なら*/
+			FreeMemoryList tmp;
+			tmp = *p;
+			p = (FreeMemoryList*)((char*)p - size);
+			*p = tmp;
+			p->size += size;
+			if(p->next != NULL){
+				p->next->before = p;
+			}
+			p->before->next = p;
+			allocedMemory -= size;
+			return;
+		}
+	}
+	//前後両方が空きメモリだったときの処理を書く
+	
+	if(size <= sizeof(FreeMemoryList)){
+		/*とりあえず、メモリの開放をあきらめる*/
+		return;
+	}else{
+		FreeMemoryList* tmp = address;
+		tmp->size = size;
+		insertMemoryList(tmp);
+		allocedMemory -= size;
+	}
+	
+}
+
+/*
+void putMemoryInfo(ImageSheet *sheet){
+	Point po;
+	FreeMemoryList *p;
+	po.x = po.y = 0;
+	clearScreen(sheet, COLOR_WHITE);
+	for(p = &freeMemoryList; p->next != NULL; p = p->next){
+		putInt(sheet, p->next->size, po, COLOR_BLACK);
+		po.y += 16;
+	}
+	draw();
+}
+*/
